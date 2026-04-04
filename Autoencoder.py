@@ -24,11 +24,16 @@ class SpectrogramAE(nn.Module):
         )
 
     def forward(self, x):
-        x = self.encoder(x)
-        x = self.decoder(x)
-        return x
+        original_size = x.shape[2:] 
+        
+        encoded = self.encoder(x)
+        decoded = self.decoder(encoded)
+        
+        cropped_output = decoded[:, :, :original_size[0], :original_size[1]]
+        
+        return cropped_output
 
-def train_model(model, train_loader, epochs=20):
+def train_model(model, train_loader, optimizer, criterion, device, epochs=20):
     model.train()
     for epoch in range(epochs):
         train_loss = 0.0

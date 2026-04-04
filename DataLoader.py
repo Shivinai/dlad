@@ -5,7 +5,7 @@ from scipy.signal import spectrogram
 import matplotlib.pyplot as plt
 
 def BuildSpectrogram(signal, sr, nps):
-    f,t,S = spectrogram(signal, sr, nps)
+    f,t,S = spectrogram(signal, fs=sr, nperseg=nps)
     S_log = 10 * np.log10(S + 1e-10)
 
     S_norm = (S_log - S_log.min()) / (S_log.max() - S_log.min())
