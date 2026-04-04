@@ -25,7 +25,7 @@ class ModemDataset(Dataset):
     def __getitem__(self, idx):
         sig = self.raw_signal[idx]
 
-        spec_norm, _, _ = BuildSpectrogram(sig, self.fs, self.nps)
+        spec_norm, _, _ = BuildSpectrogram(sig, self.sr, self.nps)
 
         spec_tensor = torch.tensor(spec_norm, dtype=torch.float32).unsqueeze(0)
 
