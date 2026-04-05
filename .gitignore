@@ -2,7 +2,7 @@ __pycache__/NoiseGenerator.cpython-314.pyc
 __pycache__/SignalGenerator.cpython-314.pyc
 __pycache__/signal.cpython-314.pyc
 torchcuda.py
-data.pth
+detector.pth
 __pycache__/AnomalyInjector.cpython-314.pyc
 __pycache__/Autoencoder.cpython-314.pyc
 __pycache__/DataLoader.cpython-314.pyc

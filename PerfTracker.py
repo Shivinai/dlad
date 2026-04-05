@@ -8,13 +8,13 @@ class PerformanceTracker:
         self.start_time = 0
         self.process = psutil.Process(os.getpid())
 
-    def trackingStart(self):
+    def tracking_start(self):
         self.start_time = time.perf_counter()
 
         if torch.cuda.is_available():
            torch.cuda.reset_peak_memory_stats()
 
-    def trackingStop(self, model, model_path):
+    def tracking_stop(self, model, model_path):
         dur  = time.perf_counter() - self.start_time
 
         ram_usage = self.process.memory_info().rss / (1024 ** 2)

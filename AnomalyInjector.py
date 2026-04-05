@@ -10,10 +10,10 @@ class ModemAnomalyInjector:
     def apply_clipping(self, threshold=0.8):
         return np.clip(self.signal, -threshold, threshold)
 
-    def apply_echo(self, delay=10, decay=0.5):
+    def apply_echo(self, delay=3000, decay=0.5):
         delayed_sig = np.pad(self.signal, (delay, 0), 'constant')[:len(self.signal)]
         return self.signal + delayed_sig * decay
-    
+
     def apply_dropout(self, duration_pct=0.2):
         mask = np.ones_like(self.signal)
         start = np.random.randint(0, len(self.signal) - int(len(self.signal)*duration_pct))

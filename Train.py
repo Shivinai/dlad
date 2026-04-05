@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+import os
 import numpy as np
 from SignalGenerator import ModemSignalGenerator
 from NoiseGenerator import ModemNoiseGenerator
@@ -36,12 +37,12 @@ if __name__ == "__main__":
 
     dataset = ModemDataset(raw_signal=training_signals, sr=44100, nps=256)
 
-    train_loader = DataLoader(dataset, batch_size=32, shuffle=True)
+    train_loader = DataLoader(dataset, batch_size=128, shuffle=True, num_workers=2, pin_memory=True)
 
     device = torch.device("cuda")
     #device = torch.device("cpu")
 
-    if device == "cuda":
+    if device.type == "cuda":
         print(f"Using device: {torch.cuda.get_device_name(0)}")
     else:
         print(f"Using CPU, expect slow training times")
@@ -53,13 +54,13 @@ if __name__ == "__main__":
 
     print("Starting training process")
 
-    tracker.trackingStart()
+    tracker.tracking_start()
 
-    train_model(model, train_loader, optimizer, criterion, device, epochs=20)
+    train_model(model, train_loader, optimizer, criterion, device, epochs=1000)
 
     print("Training complete")
 
-    torch.save(model.state_dict(), "data.pth")
+    torch.save(model.state_dict(), "detector.pth")
     print("Data written to disk")
 
-    tracker.trackingStop(model, "data.pth")
+    tracker.tracking_stop(model, "detector.pth")
