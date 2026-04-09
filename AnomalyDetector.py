@@ -87,8 +87,8 @@ if __name__ == "__main__":
     BITS_PER_FRAME = 16
     SNR_DB = 20
 
-    device = torch.device("cuda")
-    #device = torch.device("cpu")
+    #device = torch.device("cuda")
+    device = torch.device("cpu")
 
     if device.type == "cuda":
         print(f"Using device: {torch.cuda.get_device_name(0)}")
