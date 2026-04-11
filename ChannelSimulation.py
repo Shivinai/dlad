@@ -8,7 +8,7 @@ class Channel:
         self._anomaly_handlers = {
             'dropout': self._dropout,
             'echo': self._echo,
-            'clipping': self._clipping
+            'clipping': self._clipping   
         }
 
     def _get_random_range(self, signal_length):
@@ -41,8 +41,8 @@ class Channel:
         corrupted = signal.copy()
         start, end = self._get_random_range(len(signal))
         
-        ds = np.random.randint(50, 1000)
-        gain = np.round(np.random.uniform(0.4, 0.7), 1)
+        ds = np.random.randint(200, 1000)
+        gain = np.round(np.random.uniform(0.6, 0.9), 1)
         
         segment = signal[start:end].copy()
         echo_segment = np.zeros_like(segment)

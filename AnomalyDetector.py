@@ -102,6 +102,6 @@ if __name__ == "__main__":
     
     #threshold = DEBUG_THRESHOLD
     threshold = get_threshold(model=model, sr=SR, nps=NPS, device=device, snr=SNR, num_calibration_frames=50)
-    anomalous_frame = generate_frame(bpf=BITS_PER_FRAME, snr=SNR, anomaly='echo')
+    anomalous_frame = generate_frame(bpf=BITS_PER_FRAME, snr=SNR, anomaly='clipping')
 
     detect_anomaly(model, anomalous_frame, SR, NPS, device, threshold)
