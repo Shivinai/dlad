@@ -3,31 +3,27 @@ import numpy as np
 import matplotlib.pyplot as plt
 from Autoencoder import SpectrogramAE
 from DataLoader import build_spectrogram
+from scipy.signal import medfilt
 from Macros import generate_frame
 
-def get_threshold(sr, nps, device, snr_db=20, num_calibration_frames=200):
-
+def get_threshold(model, sr, nps, device, snr, num_calibration_frames=1000):
     model.eval()
     all_mse_values = []
-        
+
     with torch.no_grad():
         for _ in range(num_calibration_frames):
-            frame = generate_frame(bpf=BITS_PER_FRAME, snr_limit=SNR_DB)
-            
+            frame = generate_frame(bpf=16, snr=snr)
             spec, _, _ = build_spectrogram(frame, sr, nps)
             spec_tensor = torch.tensor(spec, dtype=torch.float32).unsqueeze(0).unsqueeze(0).to(device)
-            
             recon = model(spec_tensor).squeeze().cpu().numpy()
             
             mse_time = np.mean((spec - recon)**2, axis=0)
             all_mse_values.extend(mse_time)
-            
-    global_mean = np.mean(all_mse_values)
-    global_std = np.std(all_mse_values)
     
-    threshold = global_mean + 4 * global_std
+    all_mse_values = np.array(all_mse_values)
+    threshold = np.mean(all_mse_values) + 4 * np.std(all_mse_values)
     
-    print("Detected threshold: ", threshold)
+    print(f"Detected threshold: {threshold:.6f} (mean: {np.mean(all_mse_values):.6f}, std: {np.std(all_mse_values):.6f})")
     return threshold
 
 def detect_anomaly(model, anomalous_signal, sr, nps, device, threshold):
@@ -40,11 +36,10 @@ def detect_anomaly(model, anomalous_signal, sr, nps, device, threshold):
         anom_recon = model(anom_tensor).squeeze().cpu().numpy()
 
     anom_mse_time = np.mean((anom_spec - anom_recon)**2, axis=0)
-    # window_size = 5
-    # anom_mse_smoothed = np.convolve(anom_mse_time, np.ones(window_size)/window_size, mode='same')
 
-    #anomaly_indices = np.where(anom_mse_smoothed > THRESHOLD)[0]
-    anomaly_indices = np.where(anom_mse_time > threshold)[0]
+    anom_mse_smoothed = medfilt(anom_mse_time, kernel_size=3)
+
+    anomaly_indices = np.where(anom_mse_smoothed > threshold)[0]
 
     time_axis_signal = np.linspace(0, len(anomalous_signal) / sr, len(anomalous_signal))
 
@@ -85,11 +80,11 @@ if __name__ == "__main__":
     SR = 44100
     NPS = 256
     BITS_PER_FRAME = 16
-    SNR_DB = 30
-    DEBUG_THRESHOLD = 0.003
+    SNR = 30
+    DEBUG_THRESHOLD = 0.0045
 
-    #device = torch.device("cuda")
-    device = torch.device("cpu")
+    device = torch.device("cuda")
+    #device = torch.device("cpu")
 
     if device.type == "cuda":
         print(f"Using device: {torch.cuda.get_device_name(0)}")
@@ -105,8 +100,8 @@ if __name__ == "__main__":
         print("Weights file is missing")
         exit()
     
-    threshold = get_threshold(sr=SR, nps=NPS, device=device, snr_db=SNR_DB, num_calibration_frames=50)
     #threshold = DEBUG_THRESHOLD
-    anomalous_frame = generate_frame(bpf=BITS_PER_FRAME, snr_limit=SNR_DB, anomaly='dropout')
+    threshold = get_threshold(model=model, sr=SR, nps=NPS, device=device, snr=SNR, num_calibration_frames=50)
+    anomalous_frame = generate_frame(bpf=BITS_PER_FRAME, snr=SNR, anomaly='echo')
 
     detect_anomaly(model, anomalous_frame, SR, NPS, device, threshold)

@@ -11,13 +11,13 @@ from Macros import generate_training_data
 if __name__ == "__main__":
     NUM_TRAINING_SAMPLES = 20000
     BITS_PER_FRAME = 16
-    SNR_LIMIT = 50
+    SNR = 30
     EPOCHS = 100
 
     tracker = PerformanceTracker()
 
     print("Building dataset")
-    training_signals = generate_training_data(nts=NUM_TRAINING_SAMPLES, bpf=BITS_PER_FRAME, snr_limit=SNR_LIMIT)
+    training_signals = generate_training_data(nts=NUM_TRAINING_SAMPLES, bpf=BITS_PER_FRAME, snr=SNR)
 
     dataset = ModemDataset(raw_signal=training_signals, sr=44100, nps=256)
 
