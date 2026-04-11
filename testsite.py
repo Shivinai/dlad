@@ -5,7 +5,7 @@ import numpy as np
 
 og_bits = np.random.randint(0, 2, 16)
 snr = np.random.randint(0, 50)
-anomaly = 'clipping'
+anomaly = 'dropout'
 
 modem = Modem(fs=44100, f0=2000, f1=8000, symbol_duration=0.02)
 channel = Channel(snr_db=snr)
