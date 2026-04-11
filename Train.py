@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     tracker.tracking_start()
 
-    train_model(model, train_loader, optimizer, criterion, device, epochs=1000)
+    train_model(model, train_loader, optimizer, criterion, device, epochs=200)
 
     print("Training complete")
 
