@@ -1,43 +1,27 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-import os
 import numpy as np
-from SignalGenerator import ModemSignalGenerator
-from NoiseGenerator import ModemNoiseGenerator
-from AnomalyInjector import ModemAnomalyInjector
 from DataLoader import ModemDataset
 from Autoencoder import SpectrogramAE
 from Autoencoder import train_model
 from PerfTracker import PerformanceTracker
+from Macros import generate_training_data
 
 if __name__ == "__main__":
-    NUM_TRAINING_SAMPLES = 800
+    NUM_TRAINING_SAMPLES = 20000
     BITS_PER_FRAME = 16
-    SNR_DB = 20
+    SNR = 30
+    EPOCHS = 100
 
     tracker = PerformanceTracker()
 
-    print("Building training dataset")
-    generator = ModemSignalGenerator(fs=44100, bit_dur=0.02)
-    training_signals = []
-
-    for _ in range(NUM_TRAINING_SAMPLES):
-        random_bits = np.random.randint(0, 2, BITS_PER_FRAME)
-
-        clean_frame = generator.GenerateFrame(random_bits)
-
-        noise_gen = ModemNoiseGenerator(clean_frame, snr_db=SNR_DB)
-
-        noised_frame = noise_gen.GenerateNoise()
-
-        training_signals.append(noised_frame)
-
-    print("Generating data for PyTorch")
+    print("Building dataset")
+    training_signals = generate_training_data(nts=NUM_TRAINING_SAMPLES, bpf=BITS_PER_FRAME, snr=SNR)
 
     dataset = ModemDataset(raw_signal=training_signals, sr=44100, nps=256)
 
-    train_loader = DataLoader(dataset, batch_size=128, shuffle=True, num_workers=2, pin_memory=True)
+    train_loader = DataLoader(dataset, batch_size=512, shuffle=True, num_workers=4, pin_memory=True, persistent_workers=True)
 
     device = torch.device("cuda")
     #device = torch.device("cpu")
@@ -56,7 +40,7 @@ if __name__ == "__main__":
 
     tracker.tracking_start()
 
-    train_model(model, train_loader, optimizer, criterion, device, epochs=1000)
+    train_model(model, train_loader, optimizer, criterion, device, epochs=EPOCHS)
 
     print("Training complete")
 

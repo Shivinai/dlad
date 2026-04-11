@@ -29,8 +29,4 @@ class ModemDataset(Dataset):
 
         spec_tensor = torch.tensor(spec_norm, dtype=torch.float32).unsqueeze(0)
 
-        # if self.labels is not None:
-        #     label_tensor = torch.tensor(self.labels[idx], dtype=torch.float32)
-        #     return spec_tensor, label_tensor
-
         return spec_tensor, spec_tensor
