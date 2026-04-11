@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
-from Autoencoder import SpectrogramAE
+from Autoencoder import SpectrogramAE2D
 from DataLoader import build_spectrogram
 from scipy.signal import medfilt
 from Macros import generate_frame
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     else:
         print(f"Using CPU, expect worse performance")
     
-    model = SpectrogramAE().to(device)
+    model = SpectrogramAE2D().to(device)
 
     try:
         model.load_state_dict(torch.load("detector.pth", map_location=device))

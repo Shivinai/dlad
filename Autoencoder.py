@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 
-class SpectrogramAE(nn.Module):
+class SpectrogramAE2D(nn.Module):
     def __init__(self):
-        super(SpectrogramAE, self).__init__()
+        super(SpectrogramAE2D, self).__init__()
         
         self.encoder = nn.Sequential(
             nn.Conv2d(1, 16, kernel_size=3, stride=2, padding=1), 
@@ -31,6 +31,37 @@ class SpectrogramAE(nn.Module):
         decoded = self.decoder(encoded)
         
         cropped_output = decoded[:, :, :original_size[0], :original_size[1]]
+        
+        return cropped_output
+
+class SignalAE1D(nn.Module):
+    def __init__(self):
+        super(SignalAE1D, self).__init__()
+        
+        self.encoder = nn.Sequential(
+            nn.Conv1d(1, 16, kernel_size=7, stride=2, padding=3),
+            nn.ReLU(),
+            nn.Conv1d(16, 32, kernel_size=7, stride=2, padding=3),
+            nn.ReLU(),
+            nn.Conv1d(32, 64, kernel_size=7, stride=2, padding=3),
+            nn.ReLU()
+        )
+                
+        self.decoder = nn.Sequential(
+            nn.ConvTranspose1d(64, 32, kernel_size=7, stride=2, padding=3, output_padding=1),
+            nn.ReLU(),
+            nn.ConvTranspose1d(32, 16, kernel_size=7, stride=2, padding=3, output_padding=1),
+            nn.ReLU(),
+            nn.ConvTranspose1d(16, 1, kernel_size=7, stride=2, padding=3, output_padding=1)
+        )
+
+    def forward(self, x):
+        original_size = x.shape[2] 
+        
+        encoded = self.encoder(x)
+        decoded = self.decoder(encoded)
+        
+        cropped_output = decoded[:, :, :original_size]
         
         return cropped_output
 
@@ -63,7 +94,7 @@ def train_model(model, train_loader, optimizer, criterion, device, epochs=20):
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = SpectrogramAE().to(device)
+    model = SpectrogramAE2D().to(device)
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
