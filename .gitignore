@@ -8,4 +8,5 @@ __pycache__/Autoencoder.cpython-314.pyc
 __pycache__/DataLoader.cpython-314.pyc
 __pycache__/PerfTracker.cpython-314.pyc
 testsite.py
-testsite.py
+detector_1d.pth
+detector_2d.pth

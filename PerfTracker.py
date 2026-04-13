@@ -36,5 +36,5 @@ class PerformanceTracker:
         if torch.cuda.is_available():
             print(f"VRAM used: {gpu_mem_used:.2f} MB")
 
-        print(f"Model size: {model_size:.4f} MB")
+        print(f"1D Model size: {model_size:.4f} MB")
         
