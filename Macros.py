@@ -2,6 +2,8 @@ import numpy as np
 from ChannelSimulation import Channel
 from Modem import Modem
 
+np.random.seed(45)
+
 def generate_training_data(nts, bpf, snr):
     print("Generating training data")
     modem = Modem(fs=44100, f0=2000, f1=8000, symbol_duration=0.02)

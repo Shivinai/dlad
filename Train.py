@@ -74,7 +74,6 @@ if __name__ == "__main__":
         type=str, 
         choices=["2d", "1d", "both"], 
         default="both",
-        help="What're we training?: '2d', '1d', or 'both'"
     )
     args = parser.parse_args()
 
@@ -89,7 +88,7 @@ if __name__ == "__main__":
     if args.model in ["1d", "both"]:
         model_ref = train_1d_autoencoder(device=device)
 
-    print("\nTraining complete. Data written to disk.")
+    print("\nTraining completed. Data written to disk.")
 
     if model_ref:
         tracker.tracking_stop(model_ref, "detector.pth")

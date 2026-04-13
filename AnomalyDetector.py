@@ -6,6 +6,8 @@ from Autoencoder import SignalAE1D
 from DataLoader import build_spectrogram
 from scipy.signal import medfilt
 from Macros import generate_frame
+import matplotlib.gridspec as gridspec
+from torchinfo import summary
 
 def get_threshold_2d(model, sr, nps, device, snr, num_calibration_frames=1000):
     model.eval()
@@ -47,6 +49,8 @@ def get_threshold_1d(model, sr, nps, device, snr, num_calibration_frames=1000):
     all_mse = np.array(all_mse)
     return np.mean(all_mse) + 4 * np.std(all_mse)
 
+import matplotlib.gridspec as gridspec
+
 def detect_anomaly(model_2d, model_1d, anomalous_signal, sr, nps, device, threshold_2d, threshold_1d):
     model_2d.eval()
     model_1d.eval()
@@ -70,6 +74,8 @@ def detect_anomaly(model_2d, model_1d, anomalous_signal, sr, nps, device, thresh
     
     mse_1d = np.mean((frames_1d - recon_1d)**2, axis=1)
     mse_1d_smoothed = medfilt(mse_1d, kernel_size=5)
+    
+    recon_1d_flat = recon_1d.flatten()
 
     mask_2d = mse_2d_smoothed > threshold_2d
     mask_1d = mse_1d_smoothed > threshold_1d
@@ -98,37 +104,59 @@ def detect_anomaly(model_2d, model_1d, anomalous_signal, sr, nps, device, thresh
                 merged_intervals.append(current)
 
     min_len = min(len(mse_2d_smoothed), len(mse_1d_smoothed))
-    time_axis_signal = np.linspace(0, len(anomalous_signal) / sr, len(anomalous_signal))
     
-    fig, axs = plt.subplots(5, 1, figsize=(14, 16))
-    plt.subplots_adjust(hspace=0.5)
+    time_axis_signal = np.linspace(0, len(anomalous_signal) / sr, len(anomalous_signal))
+    time_axis_1d_flat = np.linspace(0, len(trimmed_signal) / sr, len(trimmed_signal))
+    t_1d_err = np.arange(num_frames) * window_dur + (window_dur / 2)
+    
+    fig = plt.figure(figsize=(16, 18))
+    gs = gridspec.GridSpec(4, 2, hspace=0.4, wspace=0.15)
 
-    axs[0].plot(time_axis_signal, anomalous_signal, color='blue', alpha=0.7)
-    axs[0].set_title('Detected anomalies')
-    axs[0].set_ylabel('Amp')
-    axs[0].set_xlim([time_axis_signal[0], time_axis_signal[-1]])
+    ax_main = fig.add_subplot(gs[0, :])
+    ax_main.plot(time_axis_signal, anomalous_signal, color='blue', alpha=0.7)
+    ax_main.set_title('Обнаруженные аномалии')
+    ax_main.set_ylabel('Амплитуда')
+    ax_main.set_xlim([time_axis_signal[0], time_axis_signal[-1]])
 
     if merged_intervals:
         for start_t, end_t in merged_intervals:
-            axs[0].axvspan(start_t, end_t, color='red', alpha=0.3)
+            ax_main.axvspan(start_t, end_t, color='red', alpha=0.3)
 
-    axs[1].pcolormesh(t, f, anom_spec, shading='gouraud')
-    axs[1].set_title('Original Spectrogram')
-    axs[2].pcolormesh(t, f, anom_recon_2d, shading='gouraud')
-    axs[2].set_title('2D Reconstructed Spectrogram')
+    ax_spec_orig = fig.add_subplot(gs[1, 0])
+    ax_spec_orig.pcolormesh(t, f, anom_spec, shading='gouraud')
+    ax_spec_orig.set_title('Исходная спектрограмма')
+    ax_spec_orig.set_ylabel('Частота, Гц')
 
-    axs[3].plot(t[:min_len], mse_2d_smoothed[:min_len], color='purple')
-    axs[3].set_title('2D Reconstruction Error (Spectrogram)')
-    axs[3].axhline(threshold_2d, color='red', linestyle='--')
-    axs[3].set_xlim([t[0], t[min_len-1] if min_len-1 < len(t) else t[-1]])
+    ax_spec_recon = fig.add_subplot(gs[1, 1])
+    ax_spec_recon.pcolormesh(t, f, anom_recon_2d, shading='gouraud')
+    ax_spec_recon.set_title('Восстановленная спектрограмма')
 
-    t_1d = np.arange(num_frames) * window_dur + (window_dur / 2)
-    
-    axs[4].plot(t_1d[:min_len], mse_1d_smoothed[:min_len], color='green')
-    axs[4].set_title('1D Reconstruction Error (Raw Signal)')
-    axs[4].axhline(threshold_1d, color='red', linestyle='--')
-    axs[4].set_xlabel('Time')
-    axs[4].set_xlim([t_1d[0], t_1d[min_len-1] if min_len-1 < len(t_1d) else t_1d[-1]])
+
+    ax_1d_orig = fig.add_subplot(gs[2, 0])
+    ax_1d_orig.plot(time_axis_1d_flat, trimmed_signal, color='royalblue', alpha=0.8)
+    ax_1d_orig.set_title('Исходный сигнал')
+    ax_1d_orig.set_ylabel('Амплитуда')
+    ax_1d_orig.set_xlim([time_axis_1d_flat[0], time_axis_1d_flat[-1]])
+
+    ax_1d_recon = fig.add_subplot(gs[2, 1])
+    ax_1d_recon.plot(time_axis_1d_flat, recon_1d_flat, color='darkorange', alpha=0.8)
+    ax_1d_recon.set_title('Восстановленный сигнал')
+    ax_1d_recon.set_xlim([time_axis_1d_flat[0], time_axis_1d_flat[-1]])
+
+    ax_err_2d = fig.add_subplot(gs[3, 0])
+    ax_err_2d.plot(t[:min_len], mse_2d_smoothed[:min_len], color='purple')
+    ax_err_2d.set_title('Ошибка реконструкции двухмерного автоэнкодера')
+    ax_err_2d.axhline(threshold_2d, color='red', linestyle='--')
+    ax_err_2d.set_xlabel('Время')
+    ax_err_2d.set_ylabel('СКО')
+    ax_err_2d.set_xlim([t[0], t[min_len-1] if min_len-1 < len(t) else t[-1]])
+
+    ax_err_1d = fig.add_subplot(gs[3, 1])
+    ax_err_1d.plot(t_1d_err[:min_len], mse_1d_smoothed[:min_len], color='green')
+    ax_err_1d.set_title('Ошибка реконструкции одномерного автоэнкодера')
+    ax_err_1d.axhline(threshold_1d, color='red', linestyle='--')
+    ax_err_1d.set_xlabel('Время')
+    ax_err_1d.set_xlim([t_1d_err[0], t_1d_err[min_len-1] if min_len-1 < len(t_1d_err) else t_1d_err[-1]])
 
     plt.show()
 
@@ -139,10 +167,16 @@ if __name__ == "__main__":
     SNR = 30
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
+    if device.type == "cuda":
+        print(f"Using device: {torch.cuda.get_device_name(0)}")
+    else:
+        print("Using CPU, expect perfromance issues")
     
     model_2d = SpectrogramAE2D().to(device)
+    summary(model_2d, input_size=(1, 1, 129, 1))
+
     model_1d = SignalAE1D().to(device)
+    summary(model_1d, input_size=(1, 1, 256))
 
     try:
         model_2d.load_state_dict(torch.load("detector_2d.pth", map_location=device))
