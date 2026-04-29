@@ -10,3 +10,8 @@ __pycache__/PerfTracker.cpython-314.pyc
 testsite.py
 detector_1d.pth
 detector_2d.pth
+detector_1d.pth
+__pycache__/ChannelSimulation.cpython-314.pyc
+__pycache__/Macros.cpython-314.pyc
+__pycache__/AnomalyDetector.cpython-314.pyc
+__pycache__

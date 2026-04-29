@@ -35,7 +35,7 @@ class SpectrogramAE2D(nn.Module):
         return cropped_output
 
 class SignalAE1D(nn.Module):
-    def __init__(self):
+    def __init__(self, bottleneck_size=16):
         super(SignalAE1D, self).__init__()
         
         self.encoder = nn.Sequential(
@@ -45,8 +45,16 @@ class SignalAE1D(nn.Module):
             nn.ReLU(),
             nn.Conv1d(32, 64, kernel_size=7, stride=2, padding=3),
             nn.ReLU()
+        )     
+
+        self.bottleneck = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(64 * 32, bottleneck_size),
+            nn.ReLU(),
+            nn.Linear(bottleneck_size, 64 * 32),
+            nn.ReLU()
         )
-                
+
         self.decoder = nn.Sequential(
             nn.ConvTranspose1d(64, 32, kernel_size=7, stride=2, padding=3, output_padding=1),
             nn.ReLU(),
@@ -58,8 +66,15 @@ class SignalAE1D(nn.Module):
     def forward(self, x):
         original_size = x.shape[2] 
         
-        encoded = self.encoder(x)
-        decoded = self.decoder(encoded)
+        encoded = self.encoder(x) 
+        
+        batch_size, channels, length = encoded.shape
+        
+        compressed = self.bottleneck(encoded) 
+        
+        reshaped = compressed.view(batch_size, channels, length)
+        
+        decoded = self.decoder(reshaped)
         
         cropped_output = decoded[:, :, :original_size]
         

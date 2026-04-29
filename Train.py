@@ -40,7 +40,7 @@ def train_1d_autoencoder(device):
     NUM_TRAINING_SAMPLES = 10000
     BITS_PER_FRAME = 16
     SNR = 30
-    EPOCHS = 100
+    EPOCHS = 50
     
     print("Generating raw training data...")
     training_signals = generate_training_data(nts=NUM_TRAINING_SAMPLES, bpf=BITS_PER_FRAME, snr=SNR)

@@ -8,7 +8,8 @@ class Channel:
         self._anomaly_handlers = {
             'dropout': self._dropout,
             'echo': self._echo,
-            'clipping': self._clipping   
+            'clipping': self._clipping,
+            'phase_flip': self._phase_flip 
         }
 
     def _get_random_range(self, signal_length):
@@ -62,3 +63,11 @@ class Channel:
         corrupted[start:end] = np.clip(corrupted[start:end], -threshold, threshold)
         return corrupted
         
+    def _phase_flip(self, signal):
+
+        corrupted = signal.copy()
+        start, end = self._get_random_range(len(signal))
+        
+        corrupted[start:end] = -corrupted[start:end]
+        
+        return corrupted
