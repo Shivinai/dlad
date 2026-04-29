@@ -64,7 +64,7 @@ def detect_anomaly(model_2d, model_1d, anomalous_signal, sr, nps, device, thresh
     mse_2d_smoothed = medfilt(mse_2d, kernel_size=5)
 
     num_frames = len(anomalous_signal) // nps
-    trimmed_signal = anomalous_signal[:num_frames * nps]
+    trimmed_signal = anomalous_signal[tenso:num_frames * nps]
     frames_1d = trimmed_signal.reshape(num_frames, nps)
     
     tensor_1d = torch.tensor(frames_1d, dtype=torch.float32).unsqueeze(1).to(device)
@@ -192,7 +192,7 @@ if __name__ == "__main__":
     print("Calibrating 1D model...")
     threshold_1d = get_threshold_1d(model_1d, SR, NPS, device, SNR, num_calibration_frames=50)
     
-    anomalous_frame = generate_frame(bpf=BITS_PER_FRAME, snr=SNR, anomaly='dropout')
+    anomalous_frame = generate_frame(bpf=BITS_PER_FRAME, snr=SNR, anomaly='phase_flip')
 
     detect_anomaly(
         model_2d=model_2d, 
@@ -202,5 +202,5 @@ if __name__ == "__main__":
         nps=NPS, 
         device=device, 
         threshold_2d=threshold_2d, 
-        threshold_1d=threshold_1d
+        threshold_1d=0.09
     )
